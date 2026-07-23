@@ -1,0 +1,18 @@
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Backend build and local configuration
+backend/target/
+backend/.mvn/wrapper/maven-wrapper.jar
+
+# Frontend dependencies and build output
+frontend/node_modules/
+frontend/dist/
+
+# IDE and operating-system files
+.idea/
+.vscode/
+*.iml
+.DS_Store
