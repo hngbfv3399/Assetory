@@ -95,4 +95,10 @@ public class Review {
 	public LocalDateTime getCreatedAt() {
 		return createdAt;
 	}
+
+	public Long getOrderItemId() { return orderItemId; }
+	public Product getProduct() { return product; }
+	public LocalDateTime getUpdatedAt() { return updatedAt; }
+	public void update(Integer rating, String content) { if (rating != null) this.rating = rating; if (content != null) this.content = content; updatedAt = LocalDateTime.now(); }
+	public void delete() { deletedAt = LocalDateTime.now(); }
 }

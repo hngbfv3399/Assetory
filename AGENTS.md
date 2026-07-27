@@ -26,11 +26,13 @@
 - Controller는 HTTP 입출력만, Service는 비즈니스 로직·트랜잭션, Repository는 영속성만 담당한다.
 - 엔티티를 API 응답으로 직접 노출하지 않는다.
 - 공통 응답 형태는 `success`, `data`, `message`다. 공통 예외와 오류 코드는 `global`에 둔다.
+- 새 백엔드 API는 `BusinessException + ErrorCode + GlobalExceptionHandler` 전역 예외 처리 체계를 반드시 사용한다. Controller·Service에서 응답 생성을 위한 임의의 `try-catch`를 두지 않으며, 세부 규칙은 `docs/harness-engineering.md`를 따른다.
 - Notion에 정한 HTTP method, 경로, 인증 조건을 임의로 바꾸거나 새 라이브러리를 추가하지 않는다. 필요성·영향을 먼저 설명한다.
 
 ## 작업 방식
 
 - 매 개발 단계의 시작에는 이전에 완료·검증한 작업을 먼저 요약하고, `docs/progress.md`를 기준으로 남은 TODO와 금일 구현 범위를 제시한 뒤 작업한다.
+- 구현 전에는 Notion의 해당 개발 단계·API 설계·DB 흐름을 확인하고, 이를 근거로 이번에 진행할 작업, 구현 순서, 완료 기준, 범위 밖 항목을 사용자에게 먼저 알린다. 설계와 실제 진행 상태가 다르면 차이를 함께 알린다.
 - 검증이 끝난 각 작업 뒤에는 갱신된 진행률과 남은 TODO를 짧게 보고한다.
 - 작업 전 관련 코드·문서·Git 상태를 읽고, 작은 단위로 구현한다.
 - 실행하지 않은 검증을 완료라고 말하지 않는다. 오류가 나면 새 기능보다 원인 해결을 우선한다.

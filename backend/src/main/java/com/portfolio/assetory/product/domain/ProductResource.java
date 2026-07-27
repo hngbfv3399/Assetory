@@ -89,6 +89,8 @@ public class ProductResource {
 		return displayName;
 	}
 
+	public String getResourceUrl() { return resourceUrl; }
+
 	public void update(String displayName, String resourceUrl) {
 		if (displayName != null) this.displayName = displayName;
 		if (resourceUrl != null) this.resourceUrl = resourceUrl;

@@ -1,0 +1,3 @@
+package com.portfolio.assetory.order.dto.response;
+import java.math.BigDecimal;import java.time.LocalDateTime;import java.util.List;import com.portfolio.assetory.order.domain.*;
+public record OrderDetailResponse(Long orderId,String orderNumber,List<Item> items,BigDecimal totalPrice,String orderStatus,LocalDateTime orderedAt,LocalDateTime paidAt){public static OrderDetailResponse from(Order o,List<OrderItem> items,LocalDateTime paidAt){return new OrderDetailResponse(o.getId(),o.getOrderNumber(),items.stream().map(i->new Item(i.getProduct().getId(),i.getProductName(),i.getUnitPrice())).toList(),o.getTotalAmount(),o.getStatus().name(),o.getCreatedAt(),paidAt);}public record Item(Long productId,String name,BigDecimal price){}}

@@ -47,4 +47,12 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 			"""
 	)
 	Page<Review> findPublicReviewsByProductId(@Param("productId") Long productId, Pageable pageable);
+
+	boolean existsByWriterIdAndProductId(Long writerId, Long productId);
+
+	@Query("select review from Review review join fetch review.writer join fetch review.product where review.id = :reviewId and review.deletedAt is null")
+	java.util.Optional<Review> findActiveById(@Param("reviewId") Long reviewId);
+
+	@Query(value = "select review from Review review join fetch review.product where review.writer.id = :writerId and review.deletedAt is null", countQuery = "select count(review) from Review review where review.writer.id = :writerId and review.deletedAt is null")
+	Page<Review> findActiveByWriterId(@Param("writerId") Long writerId, Pageable pageable);
 }

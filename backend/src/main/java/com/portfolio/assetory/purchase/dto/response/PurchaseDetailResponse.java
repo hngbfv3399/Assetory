@@ -1,0 +1,3 @@
+package com.portfolio.assetory.purchase.dto.response;
+import java.math.BigDecimal;import java.time.LocalDateTime;import com.portfolio.assetory.access.domain.ProductAccess;
+public record PurchaseDetailResponse(Long productId,String name,String description,String thumbnailUrl,Seller seller,Long orderId,BigDecimal purchasedPrice,LocalDateTime purchasedAt){public static PurchaseDetailResponse from(ProductAccess access,String thumbnail){var item=access.getOrderItem();var p=item.getProduct();return new PurchaseDetailResponse(p.getId(),item.getProductName(),p.getDescription(),thumbnail,new Seller(p.getSeller().getId(),p.getSeller().getNickname()),item.getOrder().getId(),item.getUnitPrice(),access.getGrantedAt());}public record Seller(Long id,String nickname){}}

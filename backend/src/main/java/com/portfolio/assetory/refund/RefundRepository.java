@@ -1,0 +1,3 @@
+package com.portfolio.assetory.refund;
+import java.util.*;import org.springframework.data.jpa.repository.*;import org.springframework.data.repository.query.Param;
+public interface RefundRepository extends JpaRepository<Refund,Long>{boolean existsByOrderItemId(Long orderItemId);@Query("select r from Refund r join fetch r.orderItem i join fetch i.order o join fetch i.product where r.id=:id and o.buyer.id=:buyer")Optional<Refund> findForBuyer(@Param("id")Long id,@Param("buyer")Long buyer);@Query("select r from Refund r join fetch r.orderItem i join fetch i.order o join fetch i.product where r.id=:id and o.seller.id=:seller")Optional<Refund> findForSeller(@Param("id")Long id,@Param("seller")Long seller);}
