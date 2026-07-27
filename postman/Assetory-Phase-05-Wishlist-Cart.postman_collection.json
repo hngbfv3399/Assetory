@@ -1,0 +1,81 @@
+{
+  "info": {
+    "_postman_id": "50c0c381-c2fd-47b2-b27c-5f530ea00d06",
+    "name": "Assetory - Phase 05 Wishlist and Cart",
+    "description": "5단계 찜·장바구니 API 검증용 Collection입니다. buyerEmail과 buyerPassword 환경변수를 입력한 뒤 Runner를 실행하세요.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "accessToken", "value": "" },
+    { "key": "wishlistProductId", "value": "" },
+    { "key": "cartItemId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "1. Authentication",
+      "item": [
+        {
+          "name": "구매자 로그인",
+          "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{buyerEmail}}\",\n  \"password\": \"{{buyerPassword}}\"\n}" }, "url": "{{baseUrl}}/api/auth/login" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));", "const body = pm.response.json();", "pm.expect(body.success).to.eql(true);", "pm.collectionVariables.set('accessToken', body.data.accessToken);"] } }]
+        }
+      ]
+    },
+    {
+      "name": "2. Wishlist",
+      "item": [
+        {
+          "name": "찜 등록",
+          "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/api/wishlists/products/{{productId}}" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('HTTP 201', () => pm.response.to.have.status(201));", "const body = pm.response.json();", "pm.expect(body.data.wished).to.eql(true);", "pm.collectionVariables.set('wishlistProductId', body.data.productId);"] } }]
+        },
+        {
+          "name": "찜 중복 등록 차단",
+          "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/api/wishlists/products/{{wishlistProductId}}" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('HTTP 409', () => pm.response.to.have.status(409));", "pm.expect(pm.response.json().data.code).to.eql('WISHLIST_ALREADY_EXISTS');"] } }]
+        },
+        {
+          "name": "내 찜 목록 조회",
+          "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/api/wishlists?page=0&size=20" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));", "const body = pm.response.json();", "pm.expect(body.data.products.map(product => product.id)).to.include(Number(pm.collectionVariables.get('wishlistProductId')));"] } }]
+        },
+        {
+          "name": "찜 취소",
+          "request": { "method": "DELETE", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/api/wishlists/products/{{wishlistProductId}}" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));", "pm.expect(pm.response.json().data.wished).to.eql(false);"] } }]
+        }
+      ]
+    },
+    {
+      "name": "3. Cart",
+      "item": [
+        {
+          "name": "상품 담기",
+          "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{accessToken}}" }], "body": { "mode": "raw", "raw": "{\n  \"productId\": {{productId}}\n}" }, "url": "{{baseUrl}}/api/cart/items" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('HTTP 201', () => pm.response.to.have.status(201));", "pm.expect(pm.response.json().data.added).to.eql(true);"] } }]
+        },
+        {
+          "name": "장바구니 중복 담기 차단",
+          "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{accessToken}}" }], "body": { "mode": "raw", "raw": "{\n  \"productId\": {{productId}}\n}" }, "url": "{{baseUrl}}/api/cart/items" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('HTTP 409', () => pm.response.to.have.status(409));", "pm.expect(pm.response.json().data.code).to.eql('CART_ITEM_ALREADY_EXISTS');"] } }]
+        },
+        {
+          "name": "장바구니 조회",
+          "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/api/cart" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));", "const item = pm.response.json().data.items.find(item => item.productId === Number(pm.environment.get('productId')));", "pm.expect(item).to.exist;", "pm.collectionVariables.set('cartItemId', item.cartItemId);"] } }]
+        },
+        {
+          "name": "상품 제거",
+          "request": { "method": "DELETE", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/api/cart/items/{{cartItemId}}" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));", "pm.expect(pm.response.json().data.removed).to.eql(true);"] } }]
+        },
+        {
+          "name": "장바구니 비우기 - 빈 장바구니도 성공",
+          "request": { "method": "DELETE", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/api/cart/items" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));", "pm.expect(pm.response.json().message).to.eql('장바구니를 비웠습니다.');"] } }]
+        }
+      ]
+    }
+  ]
+}

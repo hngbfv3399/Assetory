@@ -104,3 +104,21 @@
 - 해결 방법: 4단계 Collection 전용 변수명을 `sellerProductId`로 분리했다.
 - 검증 결과: Collection JSON 형식 재검증 예정이며, 수정된 Collection을 다시 Import해야 한다.
 - 재발 방지: 단계별 Collection에서 런타임 생성 ID는 기존 환경 변수와 겹치지 않는 전용 이름으로 관리한다.
+
+## 2026-07-27 — 찜 목록 Controller import 위치 오류
+
+- 상태: 해결
+- 문제점: 찜 목록 조회를 추가한 뒤 `./mvnw compile`이 실패했다.
+- 원인: `WishlistListResponse` import가 `WishlistController` 클래스 닫는 중괄호 뒤에 배치됐다.
+- 해결 방법: import를 패키지 선언 아래의 import 영역으로 옮겼다.
+- 검증 결과: 수정 후 백엔드 컴파일과 실제 찜 목록 API를 통과했다.
+- 재발 방지: Java 파일 변경 뒤 import가 클래스 선언 앞에만 있는지 확인하고 컴파일한다.
+
+## 2026-07-27 — 기본 Maven 테스트가 DB 환경변수 없이 실행됨
+
+- 상태: 해결
+- 문제점: `./mvnw test`가 `DB_URL`을 찾지 못해 ApplicationContext 로딩에 실패했다.
+- 원인: 테스트 실행은 `backend/.env`를 자동으로 읽지 않는데, 기본 프로필의 datasource 설정은 환경변수를 요구한다.
+- 해결 방법: `.env`를 로드한 로컬 DB 환경에서 테스트를 다시 실행한다.
+- 검증 결과: `.env`를 로드한 뒤 `./mvnw test`를 실행해 테스트 1건을 통과했다.
+- 재발 방지: DB 의존 통합 테스트는 환경변수를 명시적으로 로드하거나 테스트 전용 datasource를 구성한다.

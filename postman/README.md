@@ -39,3 +39,11 @@
 3. Collection Runner에서 1번부터 순서대로 실행한다. Collection이 생성한 검증 상품은 마지막 요청에서 논리 삭제된다.
 
 포함한 검증: 로그인, `DRAFT` 등록, 판매 준비 부족 차단, 대표 이미지·구매 자료 등록, 판매 시작·중지, 자료 URL 비노출, 자료 수정·삭제, 상품 논리 삭제.
+
+## 5단계 찜·장바구니 API
+
+1. `Assetory-Phase-05-Wishlist-Cart.postman_collection.json`을 Import한다.
+2. **Assetory Local** 환경의 `buyerEmail`, `buyerPassword`에 테스트 구매자 계정을 입력한다. 이 값은 내보내거나 Git에 저장하지 않는다.
+3. `productId`는 판매 중인 공개 상품 ID로 설정하고 Collection Runner에서 순서대로 실행한다.
+
+포함한 검증: 찜 등록·중복 차단·목록·취소, 장바구니 추가·중복 차단·조회·개별 삭제·빈 장바구니 비우기.
