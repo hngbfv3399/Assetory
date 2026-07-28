@@ -25,6 +25,8 @@ public enum ErrorCode {
 	REFUND_NOT_FOUND(HttpStatus.NOT_FOUND, "환불 요청을 찾을 수 없습니다."),
 	REFUND_ALREADY_EXISTS(HttpStatus.CONFLICT, "이미 환불 요청이 존재합니다."),
 	INVALID_REFUND_STATUS(HttpStatus.BAD_REQUEST, "현재 환불 상태에서는 요청을 처리할 수 없습니다."),
+	INQUIRY_ROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "상담방을 찾을 수 없습니다."),
+	INQUIRY_ROOM_CLOSED(HttpStatus.BAD_REQUEST, "종료된 상담방입니다."),
 	USER_INACTIVE(HttpStatus.FORBIDDEN, "활성 상태의 회원만 이용할 수 있습니다."),
 	LOGIN_FAILED(HttpStatus.UNAUTHORIZED, "이메일 또는 비밀번호가 올바르지 않습니다."),
 	INVALID_ACCESS_TOKEN(HttpStatus.UNAUTHORIZED, "Access Token이 유효하지 않습니다."),
