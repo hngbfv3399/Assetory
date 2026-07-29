@@ -140,3 +140,66 @@
 - 해결 방법: Mock 결제 성공은 결제 이력으로 보존하고, 환불 완료 상태는 `Refund.COMPLETED`, 주문 `REFUNDED`, 구매 접근권한 `REVOKED`로 연동했다.
 - 검증 결과: 승인→완료 후 구매 자료 상세가 `403`으로 차단되고, 환불 상태가 `COMPLETED`로 반환됐다.
 - 재발 방지: 기존 ENUM 값을 확장할 때는 명시적 DB 마이그레이션을 먼저 추가하고, 결제 승인 이력과 환불 상태를 혼동하지 않는다.
+
+## 2026-07-29 — 샌드박스의 Maven 테스트가 로컬 MySQL에 연결하지 못함
+
+- 상태: 해결
+- 문제점: `.env`를 로드한 `./mvnw test`가 `Communications link failure`로 ApplicationContext 생성에 실패했다.
+- 원인: 제한된 샌드박스 실행 환경은 로컬 MySQL TCP 연결을 허용하지 않았다.
+- 해결 방법: 동일한 `.env` 기반 명령을 승인된 로컬 연결 환경에서 재실행했다.
+- 검증 결과: `AssetoryApplicationTests` 1건이 성공했고, 이후 `bash scripts/run-local.sh` 기동과 공동 작업자 API의 실제 curl 종단 검증도 통과했다.
+- 재발 방지: MySQL이 필요한 테스트·서버 기동·종단 검증은 로컬 연결이 허용된 환경에서 실행한다.
+
+## 2026-07-29 — 상품 통계 정렬 메서드 누락
+
+- 상태: 해결
+- 문제점: 판매 통계 구현 뒤 `./mvnw compile`이 `ProductMetrics.salesCount()`를 찾지 못해 실패했다.
+- 원인: 상품별 판매 건수 정렬에 메서드 참조를 사용하면서 내부 집계 클래스의 접근자를 추가하지 않았다.
+- 해결 방법: `salesCount()` 접근자를 추가하고 다시 컴파일했다.
+- 검증 결과: 재컴파일과 전체 Maven 테스트가 성공했다.
+- 재발 방지: 내부 집계 타입을 정렬·매핑에 사용할 때 메서드 참조의 대상 접근자를 컴파일 전에 확인한다.
+
+## 2026-07-29 — 필수 통계 기간 파라미터 누락이 500을 반환함
+
+- 상태: 해결
+- 문제점: `GET /api/seller/statistics/sales`에서 `endDate`를 생략하면 `500 INTERNAL_SERVER_ERROR`가 반환됐다.
+- 원인: `MissingServletRequestParameterException`이 전역 입력 검증 처리 대상에 없었다.
+- 해결 방법: `GlobalExceptionHandler`에서 해당 예외를 `400 INVALID_INPUT`으로 변환했다.
+- 검증 결과: 서버 재시작 뒤 누락 요청이 `400 INVALID_INPUT`, 미인증 요청이 `401 UNAUTHORIZED`를 반환하는 것을 curl로 확인했다.
+- 재발 방지: 필수 `@RequestParam`을 추가할 때 누락 예외도 전역 입력 검증 범위에 포함한다.
+
+## 2026-07-29 — 주문 상태 집계 회귀 테스트의 불필요한 목 설정
+
+- 상태: 해결
+- 문제점: 새 `SellerOrderServiceTest` 실행 시 `UnnecessaryStubbingException`으로 Maven 테스트가 실패했다.
+- 원인: 모든 상태를 포괄하는 목 설정이 개별 상태 목 설정에 의해 사용되지 않았다.
+- 해결 방법: 포괄 목 설정을 제거하고, 실제로 호출되는 총계와 각 상태별 Repository 집계만 설정했다.
+- 검증 결과: `.env`를 로드한 `./mvnw test`에서 애플리케이션 컨텍스트와 주문 상태 집계 회귀 테스트를 포함한 2건이 성공했다.
+- 재발 방지: Mockito strict mode 테스트에서는 호출되지 않는 기본 목 설정보다 검증 대상 호출별 목 설정만 둔다.
+
+## 2026-07-29 — 변경 요청 JSON 타입과 Spring MVC 변환기 불일치
+
+- 상태: 해결
+- 문제점: 변경 요청 생성 API가 `500 HttpMessageConversionException`을 반환했고, 초기에는 `ObjectMapper` 빈도 없어 애플리케이션 컨텍스트 테스트가 실패했다.
+- 원인: Spring Boot 4의 HTTP 변환기는 Jackson 3 `tools.jackson.*` 타입을 사용하지만, JWT 런타임 의존성에서 노출된 Jackson 2 `com.fasterxml.*` 타입을 사용했다.
+- 해결 방법: 공통 `ObjectMapper` 빈을 Jackson 3 타입으로 등록하고, 변경 요청 DTO·응답·서비스의 JSON 타입을 동일한 Jackson 3 패키지로 통일했다.
+- 검증 결과: Maven 전체 테스트와 편집자 변경 요청→소유자 승인→실제 상품 반영 curl 검증이 성공했다.
+- 재발 방지: Spring Boot 4에서 JSON DTO를 추가할 때 HTTP 변환기와 같은 Jackson 패키지를 사용하고, 애플리케이션 컨텍스트 검증을 먼저 실행한다.
+
+## 2026-07-29 — 역할 검증 curl 스크립트의 예약 변수 충돌
+
+- 상태: 해결
+- 문제점: MANAGER·EDITOR 권한 검증 스크립트가 `zsh: read-only variable: status`로 중단됐다.
+- 원인: zsh의 예약 읽기 전용 변수 `status`를 HTTP 상태 코드 저장 변수로 사용했다.
+- 해결 방법: 변수명을 `response_code`로 변경했다.
+- 검증 결과: MANAGER의 상품 범위 환불·문의·통계 접근 성공과 EDITOR의 `403` 차단을 확인했다.
+- 재발 방지: zsh 스크립트에서는 예약 변수명을 피하고 `set -euo pipefail`로 중간 실패를 즉시 중단한다.
+
+## 2026-07-29 — 종단 검증 스크립트에서 서브셸 응답 상태가 사라짐
+
+- 상태: 해결
+- 문제점: 초기 공동 작업자 종단 검증 스크립트에서 회원 가입 함수를 명령 치환으로 호출하면, 이후 회원 ID가 올바르게 저장되지 않았다.
+- 원인: Bash 명령 치환은 서브셸에서 실행되므로 함수가 갱신한 전역 응답 변수가 부모 셸에 반영되지 않았다.
+- 해결 방법: 가입·로그인 함수가 명령 치환 출력 대신 `SIGNED_EMAIL`, `SIGNED_ID`, `LOGIN_TOKEN` 변수를 같은 셸에서 설정하도록 바꿨다.
+- 검증 결과: `bash scripts/test-collaborator-flow.sh`의 15단계 전체가 로컬 서버에서 성공했다.
+- 재발 방지: 셸 테스트에서 상태를 공유해야 할 함수는 명령 치환으로 감싸지 않고, 명시적 결과 변수를 사용한다.

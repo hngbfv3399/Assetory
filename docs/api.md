@@ -1,7 +1,7 @@
 # Assetory API 문서
 
-> 기준: 2026-07-28 현재 구현
-> 범위: 3~7단계 백엔드 API
+> 기준: 2026-07-29 현재 구현
+> 범위: 3~9단계 백엔드 API
 > 공통 응답: `{ "success": boolean, "data": ..., "message": string | null }`
 
 ## 공통 규칙
@@ -258,6 +258,20 @@ Notion 원문에는 요청 본문이 없지만 경로에 상품 식별자가 없
 - 거절 시 환불은 `REJECTED`, 주문은 `REFUND_REJECTED`가 되며 구매 접근권한은 유지된다.
 - 구매자·판매자 이외의 환불 상세 접근은 `404 REFUND_NOT_FOUND`다.
 
+## 판매자 주문 관리
+
+모든 API에 인증이 필요하다. 집계와 목록의 단위는 주문이 아닌 판매 상품의 주문 항목이다.
+
+| Method | API | 주요 입력 | 성공 | 설명 |
+| --- | --- | --- | --- | --- |
+| GET | `/api/seller/orders` | `status`, `productId`, `startDate`, `endDate`, `page`, `size` | 200 | 판매자 주문 항목 목록 |
+| GET | `/api/seller/orders/counts` | `productId`, `startDate`, `endDate` | 200 | 판매자 주문 상태별 건수 |
+| GET | `/api/seller/orders/{orderItemId}` | 경로 ID | 200 | 판매자 주문 항목 상세 |
+
+- `counts`의 `total`은 결제 완료와 모든 환불 진행·완료·거절 상태를 포함한다.
+- 상태별 필드는 `paid`, `refundRequested`, `refundApproved`, `refunded`, `refundRejected`이며, 각각 주문 항목의 현재 상태를 기준으로 집계한다.
+- 날짜 범위는 주문 생성 시각 기준이며, 둘 중 하나만 전달해도 해당 경계만 적용한다. 시작일이 종료일보다 늦거나 페이지 값이 범위를 벗어나면 `400 INVALID_INPUT`이다.
+
 ## 문의 채팅
 
 동일 구매자·상품·판매자 조합은 하나의 상담방을 재사용한다. 구매자와 해당 상품 판매자만 접근할 수 있다.
@@ -274,6 +288,51 @@ Notion 원문에는 요청 본문이 없지만 경로에 상품 식별자가 없
 
 - 종료된 방의 메시지 전송은 `400 INQUIRY_ROOM_CLOSED`다.
 - 참여자가 아닌 회원의 상담방 접근은 `404 INQUIRY_ROOM_NOT_FOUND`다.
+
+## 공동 작업자
+
+모든 API에 인증이 필요하다. 상품 소유자는 기존 `products.seller_id`로 유지되고, 공동 작업자 역할은 상품별 `MANAGER`, `EDITOR`, `VIEWER`다. 초대 상태는 `PENDING → ACCEPTED` 또는 `REJECTED`이며, 소유자가 제거하면 `REMOVED`로 전환된다.
+
+| Method | API | 설명 |
+| --- | --- | --- |
+| POST | `/api/seller/products/{productId}/collaborators` | 소유자가 회원을 초대 (`userId`, `role`; 생략 시 `EDITOR`) |
+| GET | `/api/seller/products/{productId}/collaborators` | 소유자가 해당 상품의 초대·수락·제거 이력 조회 |
+| PATCH | `/api/seller/collaborator-invitations/{collaboratorId}` | 초대받은 회원이 초대를 `ACCEPTED` 또는 `REJECTED`로 응답 (`status`) |
+| PATCH | `/api/seller/products/{productId}/collaborators/{collaboratorId}/role` | 소유자가 공동 작업자 역할 변경 (`role`) |
+| DELETE | `/api/seller/products/{productId}/collaborators/{collaboratorId}` | 소유자가 공동 작업자 제거 |
+| POST | `/api/seller/products/{productId}/change-requests` | `MANAGER`·`EDITOR`의 상품 변경 제안 (`type`, `payload`) |
+| GET | `/api/seller/products/{productId}/change-requests` | 소유자의 변경 요청 목록 조회 |
+| PATCH | `/api/seller/product-change-requests/{requestId}` | 소유자의 `APPROVED`·`REJECTED` 최종 검토 |
+| GET | `/api/seller/products/{productId}/refunds` | `MANAGER`의 상품별 환불 목록 |
+| PATCH | `/api/seller/products/{productId}/refunds/{refundId}/approve` | `MANAGER`의 환불 승인 |
+| PATCH | `/api/seller/products/{productId}/refunds/{refundId}/reject` | `MANAGER`의 환불 거절 |
+| PATCH | `/api/seller/products/{productId}/refunds/{refundId}/complete` | `MANAGER`의 환불 완료 |
+| GET | `/api/seller/products/{productId}/inquiries` | `MANAGER`의 상품별 문의방 목록 |
+| GET/POST | `/api/seller/products/{productId}/inquiries/{roomId}/messages` | `MANAGER`의 문의 메시지 조회·응답 |
+
+- `EDITOR`는 상품 정보·이미지·자료 변경을 직접 반영하지 않고 변경 요청으로 제출한다. `MANAGER`는 판매 시작·중지도 변경 요청으로 제출한다. 소유자가 승인한 요청만 실제 상품에 반영된다.
+- `MANAGER`는 배정 상품의 주문 목록·상태 집계, 환불 처리, 문의 응답을 즉시 수행한다. `VIEWER`는 `productId`를 지정한 통계 조회만 가능하다.
+- 통계 API의 `productId`는 선택값이며, 공동 작업자는 반드시 배정 상품 ID를 지정해야 해당 상품 데이터만 조회할 수 있다.
+- 상품 삭제와 공동 작업자 초대·목록·제거는 소유자만 가능하다.
+- 자기 자신 초대와 `PENDING`·`ACCEPTED` 상태의 중복 초대는 각각 `400 INVALID_INPUT`, `409 PRODUCT_COLLABORATOR_ALREADY_EXISTS`다.
+- 수락·거절 이외의 응답 또는 이미 처리된 초대 응답은 `400 INVALID_COLLABORATOR_STATUS`다.
+- 소유자 아닌 회원의 협업 상품 접근 및 공동 작업자 관리는 `403 FORBIDDEN`, 존재하지 않는 공동 작업자는 `404 PRODUCT_COLLABORATOR_NOT_FOUND`다.
+
+## 판매 통계·예상 정산
+
+모든 API에 인증이 필요하며, 로그인한 판매자가 소유한 주문·상품만 집계한다. 매출은 주문의 결제 완료 시각을, 환불 차감은 환불 완료 시각을 기준으로 한다.
+
+| Method | API | 설명 |
+| --- | --- | --- |
+| GET | `/api/seller/statistics/summary` | 기간별 매출·주문·구매 고객·환불·활성 상품 요약과 직전 동기간 순매출 비교 |
+| GET | `/api/seller/statistics/sales` | 필수 기간의 `DAY`·`WEEK`·`MONTH` 매출 추이 |
+| GET | `/api/seller/statistics/products` | 상품별 판매·환불·순매출 통계와 페이지네이션·정렬 |
+| GET | `/api/seller/statistics/settlement` | 순매출, 10% 플랫폼 수수료, 예상 정산 금액 (`ESTIMATED`) |
+
+- `summary`, `products`, `settlement`은 기간을 생략하면 현재 월 1일부터 오늘까지를 사용한다. 한쪽 날짜만 전달하거나 시작일이 종료일보다 늦으면 `400 INVALID_INPUT`이다.
+- `sales`는 `startDate`, `endDate`가 모두 필수이며, 누락·형식 오류·잘못된 `unit`은 `400 INVALID_INPUT`이다.
+- 환불 요청·승인·거절 상태는 환불 완료 전까지 매출에 포함한다. 완료된 환불만 차감한다.
+- 예상 정산은 실제 송금·정산 처리가 아닌 계산 결과다.
 
 | 범위 | Postman Collection |
 | --- | --- |

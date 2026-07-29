@@ -24,6 +24,38 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
 
 	@Query(
 		value = """
+			select product from Product product
+			where product.deletedAt is null
+			  and (:status is null or product.status = :status)
+			  and (product.seller.id = :userId or exists (
+				select collaborator.id from ProductCollaborator collaborator
+				where collaborator.product = product
+				  and collaborator.user.id = :userId
+				  and collaborator.status = com.portfolio.assetory.collaborator.domain.ProductCollaboratorStatus.ACCEPTED
+			  ))
+			""",
+		countQuery = """
+			select count(product) from Product product
+			where product.deletedAt is null
+			  and (:status is null or product.status = :status)
+			  and (product.seller.id = :userId or exists (
+				select collaborator.id from ProductCollaborator collaborator
+				where collaborator.product = product
+				  and collaborator.user.id = :userId
+				  and collaborator.status = com.portfolio.assetory.collaborator.domain.ProductCollaboratorStatus.ACCEPTED
+			  ))
+			"""
+	)
+	Page<Product> findManageableProducts(
+		@Param("userId") Long userId,
+		@Param("status") ProductStatus status,
+		Pageable pageable
+	);
+
+	long countBySellerIdAndStatusAndDeletedAtIsNull(Long sellerId, ProductStatus status);
+
+	@Query(
+		value = """
 			select product
 			from Product product
 			left join Review review on review.product = product and review.deletedAt is null

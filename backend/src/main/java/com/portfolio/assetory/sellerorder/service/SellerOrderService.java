@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.portfolio.assetory.global.exception.BusinessException;
 import com.portfolio.assetory.global.exception.ErrorCode;
+import com.portfolio.assetory.collaborator.service.ProductPermissionService;
 import com.portfolio.assetory.order.domain.OrderItem;
 import com.portfolio.assetory.order.domain.OrderStatus;
 import com.portfolio.assetory.payment.repository.PaymentRepository;
@@ -29,16 +30,20 @@ public class SellerOrderService {
 	private final SellerOrderItemRepository orderItemRepository;
 	private final ProductImageRepository imageRepository;
 	private final PaymentRepository paymentRepository;
+	private final ProductPermissionService permissionService;
 
-	public SellerOrderService(SellerOrderItemRepository orderItemRepository, ProductImageRepository imageRepository, PaymentRepository paymentRepository) {
+	public SellerOrderService(SellerOrderItemRepository orderItemRepository, ProductImageRepository imageRepository, PaymentRepository paymentRepository,
+		ProductPermissionService permissionService) {
 		this.orderItemRepository = orderItemRepository;
 		this.imageRepository = imageRepository;
 		this.paymentRepository = paymentRepository;
+		this.permissionService = permissionService;
 	}
 
 	public SellerOrderListResponse list(Long sellerId, OrderStatus status, Long productId, LocalDate startDate, LocalDate endDate, int page, int size) {
 		validate(page, size, startDate, endDate);
-		var orders = orderItemRepository.findForSeller(sellerId, status, productId, atStart(startDate), atNextStart(endDate),
+		Long ownerId = sellerIdForProductScope(sellerId, productId);
+		var orders = orderItemRepository.findForSeller(ownerId, status, productId, atStart(startDate), atNextStart(endDate),
 			PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "order.createdAt")));
 		List<Long> productIds = orders.getContent().stream().map(item -> item.getProduct().getId()).distinct().toList();
 		Map<Long, String> thumbnails = imageRepository.findThumbnailsByProductIds(productIds, ProductImageType.THUMBNAIL).stream()
@@ -56,11 +61,16 @@ public class SellerOrderService {
 
 	public SellerOrderCountsResponse counts(Long sellerId, Long productId, LocalDate startDate, LocalDate endDate) {
 		validate(0, 1, startDate, endDate);
+		Long ownerId = sellerIdForProductScope(sellerId, productId);
 		LocalDateTime startAt = atStart(startDate);
 		LocalDateTime endAt = atNextStart(endDate);
-		long total = orderItemRepository.countForSeller(sellerId, null, productId, startAt, endAt);
-		long paid = orderItemRepository.countForSeller(sellerId, OrderStatus.PAID, productId, startAt, endAt);
-		return new SellerOrderCountsResponse(total, paid, 0, 0, 0, 0);
+		long total = orderItemRepository.countForSeller(ownerId, null, productId, startAt, endAt);
+		long paid = orderItemRepository.countForSeller(ownerId, OrderStatus.PAID, productId, startAt, endAt);
+		long refundRequested = orderItemRepository.countForSeller(ownerId, OrderStatus.REFUND_REQUESTED, productId, startAt, endAt);
+		long refundApproved = orderItemRepository.countForSeller(ownerId, OrderStatus.REFUND_APPROVED, productId, startAt, endAt);
+		long refunded = orderItemRepository.countForSeller(ownerId, OrderStatus.REFUNDED, productId, startAt, endAt);
+		long refundRejected = orderItemRepository.countForSeller(ownerId, OrderStatus.REFUND_REJECTED, productId, startAt, endAt);
+		return new SellerOrderCountsResponse(total, paid, refundRequested, refundApproved, refunded, refundRejected);
 	}
 
 	private void validate(int page, int size, LocalDate startDate, LocalDate endDate) {
@@ -68,4 +78,7 @@ public class SellerOrderService {
 	}
 	private LocalDateTime atStart(LocalDate date) { return date == null ? null : date.atStartOfDay(); }
 	private LocalDateTime atNextStart(LocalDate date) { return date == null ? null : date.plusDays(1).atStartOfDay(); }
+	private Long sellerIdForProductScope(Long userId, Long productId) {
+		return productId == null ? userId : permissionService.getProductForManagerOperations(userId, productId).getSeller().getId();
+	}
 }

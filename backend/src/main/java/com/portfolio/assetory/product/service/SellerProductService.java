@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.portfolio.assetory.category.domain.Category;
 import com.portfolio.assetory.category.repository.CategoryRepository;
+import com.portfolio.assetory.collaborator.service.ProductPermissionService;
 import com.portfolio.assetory.global.exception.BusinessException;
 import com.portfolio.assetory.global.exception.ErrorCode;
 import com.portfolio.assetory.member.domain.User;
@@ -47,27 +48,26 @@ public class SellerProductService {
 	private final ProductResourceRepository productResourceRepository;
 	private final CategoryRepository categoryRepository;
 	private final UserRepository userRepository;
+	private final ProductPermissionService productPermissionService;
 
 	public SellerProductService(
 		ProductRepository productRepository,
 		ProductImageRepository productImageRepository,
 		ProductResourceRepository productResourceRepository,
 		CategoryRepository categoryRepository,
-		UserRepository userRepository
+		UserRepository userRepository,
+		ProductPermissionService productPermissionService
 	) {
 		this.productRepository = productRepository;
 		this.productImageRepository = productImageRepository;
 		this.productResourceRepository = productResourceRepository;
 		this.categoryRepository = categoryRepository;
 		this.userRepository = userRepository;
+		this.productPermissionService = productPermissionService;
 	}
 
 	public SellerProductDetailResponse getMyProduct(Long sellerId, Long productId) {
-		Product product = productRepository.findByIdAndDeletedAtIsNull(productId)
-			.orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
-		if (!product.getSeller().getId().equals(sellerId)) {
-			throw new BusinessException(ErrorCode.FORBIDDEN);
-		}
+		Product product = productPermissionService.getManageableProduct(sellerId, productId);
 
 		return SellerProductDetailResponse.from(
 			product,
@@ -82,9 +82,7 @@ public class SellerProductService {
 		}
 
 		PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("id")));
-		Page<Product> productPage = status == null
-			? productRepository.findBySellerIdAndDeletedAtIsNull(sellerId, pageable)
-			: productRepository.findBySellerIdAndStatusAndDeletedAtIsNull(sellerId, status, pageable);
+		Page<Product> productPage = productRepository.findManageableProducts(sellerId, status, pageable);
 		Map<Long, String> thumbnailUrls = getThumbnailUrls(productPage.getContent());
 		List<SellerProductSummaryResponse> products = productPage.getContent().stream()
 			.map(product -> SellerProductSummaryResponse.from(product, thumbnailUrls.get(product.getId())))
@@ -125,7 +123,7 @@ public class SellerProductService {
 
 	@Transactional
 	public void deleteProduct(Long sellerId, Long productId) {
-		getOwnedProduct(sellerId, productId).delete();
+		productPermissionService.getOwnedProduct(sellerId, productId).delete();
 	}
 
 	@Transactional
@@ -187,11 +185,12 @@ public class SellerProductService {
 		product.stopSale(); return product.getStatus();
 	}
 
-	private Product getOwnedProduct(Long sellerId, Long productId) {
-		Product product = productRepository.findByIdAndDeletedAtIsNull(productId)
-			.orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
-		if (!product.getSeller().getId().equals(sellerId)) throw new BusinessException(ErrorCode.FORBIDDEN);
-		return product;
+	private Product getManageableProduct(Long userId, Long productId) {
+		return productPermissionService.getManageableProduct(userId, productId);
+	}
+
+	private Product getOwnedProduct(Long userId, Long productId) {
+		return productPermissionService.getOwnedProduct(userId, productId);
 	}
 
 	private void validateOptionalText(String value) {
