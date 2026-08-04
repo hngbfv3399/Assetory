@@ -1,6 +1,7 @@
 import { Toaster } from 'sonner'
 import { Link, Outlet, useLocation, useSearchParams } from 'react-router-dom'
 import { useState, useEffect } from 'react'
+import { SiteFooter } from '../common/ui/SiteFooter.jsx'
 
 export function RootLayout() {
   const { pathname } = useLocation()
@@ -41,7 +42,7 @@ export function RootLayout() {
 
   return (
     <div className="min-h-screen bg-[#ECEFF2]">
-      <header className={`site-header-nav ${isHomeActive ? 'site-header-nav--home' : ''}`}>
+      <header className="site-header-nav site-header-nav--brand">
         <Link className="brand-logo" to="/">Assetory</Link>
 
         {/* 1. 상품 상세 페이지 (Focus Mode) ➡️ 아무것도 안 보여줌 (로고만) */}
@@ -103,6 +104,7 @@ export function RootLayout() {
       <div className="pt-20">
         <Outlet />
       </div>
+      <SiteFooter />
       <Toaster position="top-center" richColors />
     </div>
   )

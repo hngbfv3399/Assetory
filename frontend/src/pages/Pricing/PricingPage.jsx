@@ -1,71 +1,47 @@
 import { Link } from 'react-router-dom'
 
+const principles = [
+  { number: '01', title: '판매가의 10%', description: '플랫폼 수수료는 판매가의 10%로 고정됩니다. 복잡한 구간별 요금이나 별도 옵션 비용은 없습니다.' },
+  { number: '02', title: '90% 예상 정산', description: '결제 완료 매출과 환불 완료 차감을 기준으로, 판매자가 받을 것으로 예상되는 금액을 확인합니다.' },
+  { number: '03', title: '실제 송금 없음', description: 'Assetory는 Mock 결제를 사용합니다. 실제 PG 결제와 송금 정산은 제공하지 않습니다.' },
+]
+
 export function PricingPage() {
   return (
-    <main className="pricing-page-container">
-      <div className="pricing-hero">
-        <span className="pricing-badge">Pricing Policy</span>
-        <h1 className="pricing-main-title">정직하고 투명한 수수료</h1>
-        <p className="pricing-lead-text">
-          에셋토리는 창작자의 피와 땀으로 만들어진 가치를 헐값으로 갈취하지 않습니다.<br />
-          오직 서비스 유지를 위한 최소한의 비용만을 투명하게 책정합니다.
-        </p>
-      </div>
-
-      <div className="pricing-table-section">
-        {/* 에셋토리 vs 타 플랫폼 대비 보드 */}
-        <div className="pricing-comparison-table-neomorphic">
-          <div className="table-header-row">
-            <div className="header-cell">플랫폼 구분</div>
-            <div className="header-cell highlighted-cell">Assetory (에셋토리)</div>
-            <div className="header-cell">타 에셋 스토어</div>
-          </div>
-
-          <div className="table-data-row">
-            <div className="data-cell font-bold">기본 중개 수수료</div>
-            <div className="data-cell highlighted-cell font-black text-brand">단 10%</div>
-            <div className="data-cell text-red-500 font-bold">30% ~ 50%</div>
-          </div>
-
-          <div className="table-data-row">
-            <div className="data-cell font-bold">세금 및 원천징수</div>
-            <div className="data-cell highlighted-cell font-semibold text-neutral-800">
-              세법에 따른 3.3% 원천징수 후 실시간 예상 금액 고지
-            </div>
-            <div className="data-cell">해외 플랫폼 수수료 및 별도 세금 폭탄</div>
-          </div>
-
-          <div className="table-data-row">
-            <div className="data-cell font-bold">정산 주기</div>
-            <div className="data-cell highlighted-cell font-semibold text-neutral-800">
-              구매 확정 후 익일 즉시 가상 정산 가능 금액 반영
-            </div>
-            <div className="data-cell">최소 14일 ~ 익월 말일 일괄 정산</div>
-          </div>
+    <main className="pricing-page-container pricing-page">
+      <section className="pricing-statement" aria-labelledby="pricing-title">
+        <span className="pricing-statement__eyebrow">SIMPLE &amp; TRANSPARENT</span>
+        <h1 id="pricing-title">수수료는<br /><strong>단 10%</strong>입니다.</h1>
+        <p>판매가의 90%는 창작자의 다음 작업을 위해 남겨둡니다.</p>
+        <div className="pricing-statement__formula" aria-label="예상 정산 계산 예시">
+          <span>판매가 <b>₩100,000</b></span><i>−</i><span>수수료 <b>₩10,000</b></span><i>=</i><strong>예상 정산 <b>₩90,000</b></strong>
         </div>
-      </div>
+        <div className="pricing-statement__shape pricing-statement__shape--one" aria-hidden="true" />
+        <div className="pricing-statement__shape pricing-statement__shape--two" aria-hidden="true" />
+      </section>
 
-      <div className="pricing-details-cards">
-        <div className="details-neomorphic-card">
-          <h3 className="card-title text-brand">01. 10% 수수료의 쓰임새</h3>
-          <p className="card-desc">
-            에셋토리가 공제하는 10%의 수수료는 호스팅 비용, 결제 모듈 연동 수수료, 그리고 창작자 간의 건강한 에셋 에코시스템을 유지하기 위한 최소한의 플랫폼 운영 리소스로만 사용됩니다.
-          </p>
+      <section className="pricing-principles" aria-labelledby="pricing-principles-title">
+        <header>
+          <span>HOW IT WORKS</span>
+          <h2 id="pricing-principles-title">가격은 단순하게,<br /><span className="pricing-title-keep">판매 흐름은 투명하게</span></h2>
+          <p>판매자는 복잡한 계산 대신 상품과 작업에 집중할 수 있어야 한다고 생각합니다.</p>
+        </header>
+        <div className="pricing-principles__list">
+          {principles.map((principle) => <article key={principle.number}>
+            <span>{principle.number}</span><h3>{principle.title}</h3><p>{principle.description}</p>
+          </article>)}
         </div>
+      </section>
 
-        <div className="details-neomorphic-card">
-          <h3 className="card-title text-neutral-800">02. 가상 정산 프로세스</h3>
-          <p className="card-desc">
-            에셋토리는 모의 결제 시스템을 기반으로 운영되므로 실제 신용카드 정산은 발생하지 않습니다. 대신 등록된 예상 정산 금액을 마이페이지 판매 대시보드에서 실시간으로 완벽하게 확인해 볼 수 있습니다.
-          </p>
-        </div>
-      </div>
+      <section className="pricing-note" aria-labelledby="pricing-note-title">
+        <div><span>SELLER DASHBOARD</span><h2 id="pricing-note-title">판매가 쌓일수록,<br /><span className="pricing-title-keep">다음 선택은 더 선명하게</span></h2></div>
+        <div className="pricing-note__receipt" aria-hidden="true"><span>이번 달 판매</span><strong>₩ 1,240,000</strong><i /><span>예상 정산</span><b>₩ 1,116,000</b><em>수수료 10% 반영</em></div>
+      </section>
 
-      <div className="pricing-cta-section mt-16 text-center">
-        <Link to="/products" className="pricing-page-cta-btn">
-          첫 에셋 등록하러 가기 &rarr;
-        </Link>
-      </div>
+      <section className="pricing-page-cta" aria-labelledby="pricing-cta-title">
+        <span>READY WHEN YOU ARE</span><h2 id="pricing-cta-title">판매할 준비가 되었다면,<br /><span className="pricing-title-keep">첫 상품부터 시작해 보세요</span></h2>
+        <div><Link to="/products">상품 탐색하기 <i aria-hidden="true">→</i></Link><Link to="/login">판매자 시작하기 <i aria-hidden="true">→</i></Link></div>
+      </section>
     </main>
   )
 }

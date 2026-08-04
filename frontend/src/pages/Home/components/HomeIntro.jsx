@@ -185,7 +185,10 @@ export function HomeIntro({ products, isProductsLoading }) {
           {coreValues.map((value) => (
             <article className={`core-value-card core-value-card--${value.icon}`} key={value.step}>
               <div className="core-value-copy">
-                <span className="core-value-step">{value.audience} · {value.step}</span>
+                <span className="core-value-step">
+                  <span className={`core-value-audience core-value-audience--${value.audience}`}>{value.audience}</span>
+                  <span>{value.step}</span>
+                </span>
                 <h3>{value.title}</h3>
                 <p>{value.description}</p>
               </div>
@@ -199,7 +202,7 @@ export function HomeIntro({ products, isProductsLoading }) {
                 {value.icon === 'plane' && (
                   <div className="core-visual-transfer">
                     <span className="core-visual-transfer__from">상품 등록</span>
-                    <span className="core-visual-transfer__line">·····✈·····</span>
+                    <span className="core-visual-transfer__line">→</span>
                     <span className="core-visual-transfer__to">구매 완료</span>
                   </div>
                 )}
@@ -261,10 +264,10 @@ export function HomeIntro({ products, isProductsLoading }) {
               수수료 단 10%
             </h2>
             <p className="pricing-subtitle">
-              기존 플랫폼의 30~50% 폭리 수수료에<br />창작 의지가 꺾이셨나요?
+              기존 플랫폼의 30~50% 폭리 수수료에<br />{' '}창작 의지가 꺾이셨나요?
             </p>
             <p className="pricing-notice">
-              에셋토리는 복잡한 중간 마진을 완전히 제거하고,<br />정산금의 90%를 창작자에게 고스란히 이식해 드립니다.
+              에셋토리는 복잡한 중간 마진을 완전히 제거하고,<br />{' '}정산금의 90%를 창작자에게 고스란히 이식해 드립니다.
             </p>
             <div className="mt-8">
               <Link to="/products" className="pricing-cta-btn">
@@ -296,14 +299,6 @@ export function HomeIntro({ products, isProductsLoading }) {
           <Link className="home-role-cta__buyer" to="/products">필요한 에셋을 찾고 있어요 <span aria-hidden="true">→</span></Link>
         </div>
       </section>
-
-      {/* 4. Foot note */}
-      <footer className="intro-footer">
-        <p className="footer-logo">Assetory</p>
-        <p className="footer-copyright">
-          © 2026 Assetory Market Platform. All rights reserved. (수수료 10% 정산 정책 및 부가세 별도)
-        </p>
-      </footer>
 
     </div>
   )
