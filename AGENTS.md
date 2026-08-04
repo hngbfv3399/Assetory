@@ -29,6 +29,18 @@
 - 새 백엔드 API는 `BusinessException + ErrorCode + GlobalExceptionHandler` 전역 예외 처리 체계를 반드시 사용한다. Controller·Service에서 응답 생성을 위한 임의의 `try-catch`를 두지 않으며, 세부 규칙은 `docs/harness-engineering.md`를 따른다.
 - Notion에 정한 HTTP method, 경로, 인증 조건을 임의로 바꾸거나 새 라이브러리를 추가하지 않는다. 필요성·영향을 먼저 설명한다.
 
+### 프론트엔드 구조 규칙
+
+- 프론트엔드는 JavaScript만 사용한다. 새 프론트 파일은 `.js`·`.jsx`로 작성하며 TypeScript 파일·문법을 추가하지 않는다.
+- UI는 shadcn/ui를 기반으로 구성한다. 생성된 기본 UI와 실제로 두 곳 이상에서 같은 역할로 쓰이는 UI는 `src/common/ui`에 둔다. 페이지에 종속된 UI 조합은 해당 페이지의 `components`에 둔다.
+- `Page` 파일은 URL 파라미터 처리, 최상위 Query Hook 실행, 로딩·오류·성공 상태 분기, 화면 조립만 맡는다. 직접 `fetch` 호출, JSON 변환, 복잡한 폼 처리, 재사용 UI 구현을 두지 않는다.
+- 데이터 흐름은 `Page → 페이지 전용 React Query Hook → 페이지 전용 API 함수 → common/api fetchClient → Backend`로 유지한다. API 함수는 경로·메서드·요청 본문·응답 데이터만 담당하고, Toast·화면 이동·로딩 상태를 포함하지 않는다.
+- 서버 원본 데이터는 React Query로만 관리한다. 여러 화면이 공유하는 UI·선택 상태만 Zustand에 두고, 가까운 부모·자식 데이터는 props로 전달한다. 검색어·필터·페이지 번호처럼 공유 가능한 상태는 URL Search Params를 우선 사용한다.
+- `src/common/api`는 base URL, 헤더·토큰, JSON 변환, HTTP 상태 처리, `ApiError` 변환을 담당한다. 모든 페이지 API는 이 공통 클라이언트를 사용하며 `fetch`를 직접 호출하지 않는다.
+- 오류는 HTTP 상태와 서버 오류 코드를 구분한다. 현재 백엔드 오류 코드는 최상위 `code`가 아니라 `data.code`에 있으므로, 공통 클라이언트는 이를 `ApiError.status`, `ApiError.code`, `ApiError.message`로 변환한다. 단순 요청 실패는 공통 Toast, 페이지 구조를 바꾸는 `401`·`403`·`404` 등은 Page에서 분기한다.
+- 공통 상수·범용 훅·전역 Zustand store는 각각 `src/common/constants`, `src/common/hooks`, `src/common/store`에 둔다. 특정 페이지 전용 API·Hook·store·컴포넌트는 `src/pages/<PageName>/` 가까이에 둔다. 폴더는 실제 코드가 생길 때만 만든다.
+- 파일명은 컴포넌트 PascalCase(`ProductDetailPage.jsx`), Hook·store `use` 접두사(`useProductDetail.js`), API camelCase(`productDetailApi.js`)를 사용한다.
+
 ## 작업 방식
 
 - 매 개발 단계의 시작에는 이전에 완료·검증한 작업을 먼저 요약하고, `docs/progress.md`를 기준으로 남은 TODO와 금일 구현 범위를 제시한 뒤 작업한다.
@@ -51,4 +63,5 @@
 ## 주요 문서
 
 - [하네스 엔지니어링](docs/harness-engineering.md): 도메인 불변 규칙, 작업 흐름, 검증 기준
+- [디자인 규칙](docs/design-guidelines.md): 브랜드 언어, UI 구성, 반응형·접근성·성능 검수 기준
 - [3일차 작업일지](docs/day-03.md): 기반·회원 공통 로직의 실제 작업 기록
