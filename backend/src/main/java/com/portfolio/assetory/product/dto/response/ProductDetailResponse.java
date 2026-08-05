@@ -7,6 +7,7 @@ import java.util.List;
 import com.portfolio.assetory.product.domain.Product;
 import com.portfolio.assetory.product.domain.ProductImage;
 import com.portfolio.assetory.product.domain.ProductImageType;
+import com.portfolio.assetory.product.domain.ProductSaleType;
 
 public record ProductDetailResponse(
 	Long id,
@@ -16,6 +17,9 @@ public record ProductDetailResponse(
 	String summary,
 	String description,
 	BigDecimal price,
+	ProductSaleType saleType,
+	BigDecimal minimumPrice,
+	LocalDateTime releaseAt,
 	List<Image> images,
 	BigDecimal averageRating,
 	long reviewCount,
@@ -39,6 +43,9 @@ public record ProductDetailResponse(
 			product.getSummary(),
 			product.getDescription(),
 			product.getPrice(),
+			product.getSaleType(),
+			product.getMinimumPrice(),
+			product.getReleaseAt(),
 			images.stream().map(Image::from).toList(),
 			averageRating,
 			reviewCount,

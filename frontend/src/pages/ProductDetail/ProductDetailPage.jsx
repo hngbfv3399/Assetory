@@ -1,8 +1,11 @@
-import { useParams, Link } from 'react-router-dom'
+import { useNavigate, useParams, Link } from 'react-router-dom'
 import { useProductDetailQuery } from '../Explore/hooks/useExploreCatalog.js'
 import { Skeleton } from '../../common/ui/skeleton.jsx'
 import { Badge } from '../../common/ui/badge.jsx'
 import { toast } from 'sonner'
+import { useAuthStore } from '../../common/store/useAuthStore.js'
+import { addCartItem, createDirectOrder, payMock } from '../Purchase/purchaseApi.js'
+import { usePurchaseMutation } from '../Purchase/usePurchase.js'
 
 const currencyFormatter = new Intl.NumberFormat('ko-KR')
 
@@ -13,10 +16,23 @@ const isValidImage = (url) => {
 
 export function ProductDetailPage() {
   const { productId } = useParams()
+  const navigate = useNavigate()
+  const accessToken = useAuthStore((state) => state.accessToken)
   const { data, isLoading, error } = useProductDetailQuery(productId ? Number(productId) : null)
+  const addCartMutation = usePurchaseMutation(addCartItem)
+  const buyMutation = usePurchaseMutation(async (id) => {
+    const order = await createDirectOrder(id)
+    await Promise.all(order.orders.map((created) => payMock(created.orderId)))
+  })
 
-  function handleMockBuy() {
-    toast.success('구매가 완료되었습니다! (Mock 결제 완료)')
+  async function handleMockBuy() {
+    if (!accessToken) { navigate('/login', { state: { from: `/products/${productId}` } }); return }
+    try { await buyMutation.mutateAsync(Number(productId)); toast.success('Mock 결제가 완료되었습니다. 내 라이브러리에서 자료를 이용하세요.'); navigate('/library') } catch (requestError) { toast.error(requestError.message) }
+  }
+
+  async function handleAddCart() {
+    if (!accessToken) { navigate('/login', { state: { from: `/products/${productId}` } }); return }
+    try { await addCartMutation.mutateAsync(Number(productId)); toast.success('장바구니에 담았습니다.') } catch (requestError) { toast.error(requestError.message) }
   }
 
   if (isLoading) {
@@ -90,9 +106,10 @@ export function ProductDetailPage() {
           <p className="detail-product-desc">{product.description}</p>
 
           <div className="detail-cta-box">
-            <button type="button" className="detail-buy-btn" onClick={handleMockBuy}>
-              Mock 결제로 구매하기
+            <button type="button" className="detail-buy-btn" disabled={buyMutation.isPending} onClick={handleMockBuy}>
+              {buyMutation.isPending ? '결제 처리 중' : 'Mock 결제로 구매하기'}
             </button>
+            <button type="button" className="mt-3 w-full rounded-xl border border-stone-400 px-4 py-3 font-bold" disabled={addCartMutation.isPending} onClick={handleAddCart}>장바구니에 담기</button>
           </div>
         </div>
 

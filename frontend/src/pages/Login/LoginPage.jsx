@@ -1,15 +1,19 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
+import { useLoginMutation, useSignupMutation } from './useAuthSession.js'
 
 export function LoginPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const [isRegister, setIsRegister] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
+  const loginMutation = useLoginMutation()
+  const signupMutation = useSignupMutation()
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
     if (!email || !password || (isRegister && !name)) {
       toast.error('모든 정보를 채워주세요.')
@@ -17,11 +21,9 @@ export function LoginPage() {
     }
 
     if (isRegister) {
-      toast.success(`${name}님, 회원가입이 완료되었습니다! (Mock)`)
-      setIsRegister(false)
+      try { await signupMutation.mutateAsync({ email, password, nickname: name }); toast.success('회원가입이 완료되었습니다. 로그인해 주세요.'); setIsRegister(false) } catch (error) { toast.error(error.message) }
     } else {
-      toast.success('로그인에 성공했습니다! (Mock)')
-      navigate('/')
+      try { await loginMutation.mutateAsync({ email, password }); toast.success('로그인했습니다.'); navigate(location.state?.from || '/seller', { replace: true }) } catch (error) { toast.error(error.message) }
     }
   }
 
@@ -76,7 +78,7 @@ export function LoginPage() {
             />
           </div>
 
-          <button type="submit" className="login-submit-btn">
+          <button type="submit" className="login-submit-btn" disabled={loginMutation.isPending || signupMutation.isPending}>
             {isRegister ? '회원가입하기' : '로그인하기'}
           </button>
         </form>

@@ -54,17 +54,39 @@ public class LocalSampleDataInitializer {
 			Category design = findOrCreateCategory(categoryRepository, "디자인", 1);
 			Category development = findOrCreateCategory(categoryRepository, "개발", 2);
 			Category ebook = findOrCreateCategory(categoryRepository, "전자책", 3);
+			Category threeDimensional = findOrCreateCategory(categoryRepository, "3D", 4);
+			Category music = findOrCreateCategory(categoryRepository, "음악·사운드", 5);
+			Category film = findOrCreateCategory(categoryRepository, "영상·영화", 6);
+			Category gaming = findOrCreateCategory(categoryRepository, "게임", 7);
+			Category education = findOrCreateCategory(categoryRepository, "교육·자기계발", 8);
 			List<Category> catalogCategories = List.of(
 				findOrCreateSubcategory(categoryRepository, "UI/UX", 1, design),
 				findOrCreateSubcategory(categoryRepository, "게임 에셋", 2, design),
 				findOrCreateSubcategory(categoryRepository, "아트·일러스트", 3, design),
-				findOrCreateSubcategory(categoryRepository, "영상·모션", 4, design),
+				findOrCreateSubcategory(categoryRepository, "브랜드·그래픽", 4, design),
+				findOrCreateSubcategory(categoryRepository, "폰트·타이포그래피", 5, design),
 				findOrCreateSubcategory(categoryRepository, "웹·앱 템플릿", 1, development),
 				findOrCreateSubcategory(categoryRepository, "코드·라이브러리", 2, development),
-				findOrCreateSubcategory(categoryRepository, "프로그램·도구", 3, development),
+				findOrCreateSubcategory(categoryRepository, "플러그인·확장", 3, development),
+				findOrCreateSubcategory(categoryRepository, "프로그램·도구", 4, development),
 				findOrCreateSubcategory(categoryRepository, "판매·운영 가이드", 1, ebook),
 				findOrCreateSubcategory(categoryRepository, "영상 강의", 2, ebook),
-				findOrCreateSubcategory(categoryRepository, "비즈니스 자료", 3, ebook)
+				findOrCreateSubcategory(categoryRepository, "비즈니스 자료", 3, ebook),
+				findOrCreateSubcategory(categoryRepository, "3D 모델", 1, threeDimensional),
+				findOrCreateSubcategory(categoryRepository, "텍스처·머티리얼", 2, threeDimensional),
+				findOrCreateSubcategory(categoryRepository, "3D 프린팅", 3, threeDimensional),
+				findOrCreateSubcategory(categoryRepository, "음악 샘플·루프", 1, music),
+				findOrCreateSubcategory(categoryRepository, "사운드 이펙트", 2, music),
+				findOrCreateSubcategory(categoryRepository, "음원 제작 도구", 3, music),
+				findOrCreateSubcategory(categoryRepository, "영상 템플릿", 1, film),
+				findOrCreateSubcategory(categoryRepository, "모션 그래픽", 2, film),
+				findOrCreateSubcategory(categoryRepository, "영상 편집 도구", 3, film),
+				findOrCreateSubcategory(categoryRepository, "게임 개발 도구", 1, gaming),
+				findOrCreateSubcategory(categoryRepository, "게임 UI·아이콘", 2, gaming),
+				findOrCreateSubcategory(categoryRepository, "맵·레벨 에셋", 3, gaming),
+				findOrCreateSubcategory(categoryRepository, "전문 강의", 1, education),
+				findOrCreateSubcategory(categoryRepository, "학습 워크북", 2, education),
+				findOrCreateSubcategory(categoryRepository, "자기계발 자료", 3, education)
 			);
 			User seller = findOrCreateUser(
 				userRepository, passwordEncoder, SAMPLE_SELLER_EMAIL, "에셋토리판매자"
@@ -125,7 +147,7 @@ public class LocalSampleDataInitializer {
 			Category category = categories.get(sampleIndex % categories.size());
 			productRepository.findByName(name).ifPresentOrElse(
 				product -> {
-					product.update(category, null, null, null, null);
+					product.update(category, null, null, null, null, null, null, null);
 					productRepository.save(product);
 				},
 				() -> createOnSaleProduct(
@@ -195,7 +217,7 @@ public class LocalSampleDataInitializer {
 		BigDecimal price,
 		String imageUrl
 	) {
-		Product product = Product.create(seller, category, name, summary, description, null, price);
+		Product product = Product.create(seller, category, name, summary, description, null, price, null, null, null);
 		product.startSale();
 		Product savedProduct = productRepository.save(product);
 		productImageRepository.save(ProductImage.attach(
@@ -215,7 +237,10 @@ public class LocalSampleDataInitializer {
 			"공개 목록에서 제외되어야 하는 상품입니다.",
 			"판매 시작 전 테스트 상품입니다.",
 			null,
-			new BigDecimal("9900")
+			new BigDecimal("9900"),
+			null,
+			null,
+			null
 		);
 		productRepository.save(product);
 	}

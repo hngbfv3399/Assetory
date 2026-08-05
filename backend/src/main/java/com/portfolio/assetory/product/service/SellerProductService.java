@@ -1,5 +1,6 @@
 package com.portfolio.assetory.product.service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -22,6 +23,7 @@ import com.portfolio.assetory.product.domain.ProductImage;
 import com.portfolio.assetory.product.domain.ProductImageType;
 import com.portfolio.assetory.product.domain.ProductResource;
 import com.portfolio.assetory.product.domain.ProductStatus;
+import com.portfolio.assetory.product.domain.ProductSaleType;
 import com.portfolio.assetory.product.dto.request.CreateSellerProductRequest;
 import com.portfolio.assetory.product.dto.request.UpdateSellerProductRequest;
 import com.portfolio.assetory.product.dto.request.CreateProductImageRequest;
@@ -104,8 +106,12 @@ public class SellerProductService {
 			request.summary().trim(),
 			request.description().trim(),
 			null,
-			request.price()
+			request.price(),
+			request.saleType(),
+			request.minimumPrice(),
+			request.releaseAt()
 		);
+		validateSaleModel(product.getSaleType(), product.getMinimumPrice(), product.getReleaseAt());
 		return SellerProductCreateResponse.from(productRepository.save(product));
 	}
 
@@ -117,7 +123,13 @@ public class SellerProductService {
 		validateOptionalText(request.name());
 		validateOptionalText(request.summary());
 		validateOptionalText(request.description());
-		product.update(category, trim(request.name()), trim(request.summary()), trim(request.description()), request.price());
+		ProductSaleType saleType = request.saleType() == null ? product.getSaleType() : request.saleType();
+		BigDecimal minimumPrice = saleType == ProductSaleType.PAY_WHAT_YOU_WANT
+			? (request.minimumPrice() == null ? product.getMinimumPrice() : request.minimumPrice()) : null;
+		java.time.LocalDateTime releaseAt = saleType == ProductSaleType.PREORDER
+			? (request.releaseAt() == null ? product.getReleaseAt() : request.releaseAt()) : null;
+		validateSaleModel(saleType, minimumPrice, releaseAt);
+		product.update(category, trim(request.name()), trim(request.summary()), trim(request.description()), request.price(), saleType, minimumPrice, releaseAt);
 		return SellerProductUpdateResponse.from(product);
 	}
 
@@ -195,6 +207,15 @@ public class SellerProductService {
 
 	private void validateOptionalText(String value) {
 		if (value != null && value.isBlank()) throw new BusinessException(ErrorCode.INVALID_INPUT);
+	}
+
+	private void validateSaleModel(ProductSaleType saleType, BigDecimal minimumPrice, java.time.LocalDateTime releaseAt) {
+		if (saleType == ProductSaleType.PAY_WHAT_YOU_WANT && minimumPrice == null) {
+			throw new BusinessException(ErrorCode.INVALID_INPUT);
+		}
+		if (saleType == ProductSaleType.PREORDER && releaseAt == null) {
+			throw new BusinessException(ErrorCode.INVALID_INPUT);
+		}
 	}
 
 	private String trim(String value) { return value == null ? null : value.trim(); }

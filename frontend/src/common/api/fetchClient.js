@@ -4,7 +4,7 @@ import { ApiError } from './ApiError.js'
 const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '')
 
 export async function fetchClient(path, options = {}) {
-  const { body, headers, ...requestOptions } = options
+  const { body, headers, responseType, ...requestOptions } = options
   const token = useAuthStore.getState().accessToken
   const requestUrl = path.startsWith('http') ? path : `${apiBaseUrl}${path}`
 
@@ -12,6 +12,7 @@ export async function fetchClient(path, options = {}) {
   try {
     response = await fetch(requestUrl, {
       ...requestOptions,
+      credentials: 'include',
       headers: {
         ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -22,6 +23,8 @@ export async function fetchClient(path, options = {}) {
   } catch {
     throw new ApiError({ status: 0, code: 'NETWORK_ERROR', message: '서버에 연결할 수 없습니다.' })
   }
+
+  if (responseType === 'blob' && response.ok) return response.blob()
 
   const result = await response.json().catch(() => null)
   const code = result?.data?.code ?? 'UNKNOWN_ERROR'

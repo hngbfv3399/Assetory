@@ -56,6 +56,15 @@ public class Product {
 
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false, length = 20)
+	private ProductSaleType saleType;
+
+	@Column(precision = 15, scale = 2)
+	private BigDecimal minimumPrice;
+
+	private LocalDateTime releaseAt;
+
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false, length = 20)
 	private ProductStatus status;
 
 	@OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
@@ -81,7 +90,10 @@ public class Product {
 		String summary,
 		String description,
 		String usageGuide,
-		BigDecimal price
+		BigDecimal price,
+		ProductSaleType saleType,
+		BigDecimal minimumPrice,
+		LocalDateTime releaseAt
 	) {
 		Product product = new Product();
 		product.seller = seller;
@@ -91,6 +103,9 @@ public class Product {
 		product.description = description;
 		product.usageGuide = usageGuide;
 		product.price = price;
+		product.saleType = saleType == null ? ProductSaleType.ONE_TIME : saleType;
+		product.minimumPrice = minimumPrice;
+		product.releaseAt = releaseAt;
 		product.status = ProductStatus.DRAFT;
 		return product;
 	}
@@ -118,12 +133,17 @@ public class Product {
 
 	public void stopSale() { status = ProductStatus.STOPPED; }
 
-	public void update(Category category, String name, String summary, String description, BigDecimal price) {
+	public void update(Category category, String name, String summary, String description, BigDecimal price, ProductSaleType saleType, BigDecimal minimumPrice, LocalDateTime releaseAt) {
 		if (category != null) this.category = category;
 		if (name != null) this.name = name;
 		if (summary != null) this.summary = summary;
 		if (description != null) this.description = description;
 		if (price != null) this.price = price;
+		if (saleType != null) {
+			this.saleType = saleType;
+			this.minimumPrice = minimumPrice;
+			this.releaseAt = releaseAt;
+		}
 	}
 
 	public void delete() {
@@ -160,6 +180,18 @@ public class Product {
 
 	public ProductStatus getStatus() {
 		return status;
+	}
+
+	public ProductSaleType getSaleType() {
+		return saleType;
+	}
+
+	public BigDecimal getMinimumPrice() {
+		return minimumPrice;
+	}
+
+	public LocalDateTime getReleaseAt() {
+		return releaseAt;
 	}
 
 	public List<ProductImage> getImages() {

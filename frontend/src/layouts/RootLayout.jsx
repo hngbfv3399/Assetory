@@ -1,10 +1,15 @@
 import { Toaster } from 'sonner'
-import { Link, Outlet, useLocation, useSearchParams } from 'react-router-dom'
+import { Link, Outlet, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { SiteFooter } from '../common/ui/SiteFooter.jsx'
+import { useAuthStore } from '../common/store/useAuthStore.js'
+import { useLogoutMutation } from '../pages/Login/useAuthSession.js'
 
 export function RootLayout() {
   const { pathname } = useLocation()
+  const navigate = useNavigate()
+  const accessToken = useAuthStore((state) => state.accessToken)
+  const logoutMutation = useLogoutMutation()
   const [searchParams, setSearchParams] = useSearchParams()
 
   // URL 'keyword' 파라미터 감지 및 로컬 입력 동기화
@@ -40,6 +45,11 @@ export function RootLayout() {
   const isSellerActive = pathname === '/seller'
   const isSellerStudio = pathname.startsWith('/seller')
 
+  const logout = async () => {
+    await logoutMutation.mutateAsync()
+    navigate('/')
+  }
+
   return (
     <div className="min-h-screen bg-[#fbf8ef]">
       {!isSellerStudio ? <header className="site-header-nav site-header-nav--brand">
@@ -60,9 +70,7 @@ export function RootLayout() {
                 🔍
               </button>
             </form>
-            <Link className="login-button-link" to="/login">
-              로그인 / 회원가입
-            </Link>
+            {accessToken ? <button type="button" className="login-button-link" onClick={logout}>로그아웃</button> : <Link className="login-button-link" to="/login">로그인 / 회원가입</Link>}
           </>
         )}
 
@@ -99,9 +107,7 @@ export function RootLayout() {
             >
               판매자 센터
             </Link>
-            <Link className="login-button-link" to="/login">
-              로그인 / 회원가입
-            </Link>
+            {accessToken ? <button type="button" className="login-button-link" onClick={logout}>로그아웃</button> : <Link className="login-button-link" to="/login">로그인 / 회원가입</Link>}
           </nav>
         )}
       </header> : null}

@@ -7,6 +7,8 @@ import { FeaturesPage } from '../../pages/Features/FeaturesPage.jsx'
 import { ProductDetailPage } from '../../pages/ProductDetail/ProductDetailPage.jsx'
 import { LoginPage } from '../../pages/Login/LoginPage.jsx'
 import { SellerCenterPage } from '../../pages/SellerCenter/SellerCenterPage.jsx'
+import { CartPage } from '../../pages/Purchase/CartPage.jsx'
+import { LibraryPage } from '../../pages/Purchase/LibraryPage.jsx'
 import { RootLayout } from '../../layouts/RootLayout.jsx'
 
 export function AppRouter() {
@@ -20,6 +22,8 @@ export function AppRouter() {
           <Route path="pricing" element={<PricingPage />} />
           <Route path="features" element={<FeaturesPage />} />
           <Route path="login" element={<LoginPage />} />
+          <Route path="cart" element={<CartPage />} />
+          <Route path="library" element={<LibraryPage />} />
           <Route path="seller/*" element={<SellerCenterPage />} />
         </Route>
       </Routes>
