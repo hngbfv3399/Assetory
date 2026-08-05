@@ -7,6 +7,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 
@@ -24,6 +27,10 @@ public class Category {
 	@Column(nullable = false)
 	private int sortOrder;
 
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "parent_id")
+	private Category parent;
+
 	@Column(name = "is_active", nullable = false)
 	private boolean active;
 
@@ -34,9 +41,14 @@ public class Category {
 	}
 
 	public static Category create(String name, int sortOrder) {
+		return create(name, sortOrder, null);
+	}
+
+	public static Category create(String name, int sortOrder, Category parent) {
 		Category category = new Category();
 		category.name = name;
 		category.sortOrder = sortOrder;
+		category.parent = parent;
 		category.active = true;
 		return category;
 	}
@@ -56,6 +68,10 @@ public class Category {
 
 	public int getSortOrder() {
 		return sortOrder;
+	}
+
+	public Category getParent() {
+		return parent;
 	}
 
 	public boolean isActive() {

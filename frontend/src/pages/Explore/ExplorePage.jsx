@@ -1,4 +1,4 @@
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 
 import { Button } from '../../common/ui/button.jsx'
 import { Skeleton } from '../../common/ui/skeleton.jsx'
@@ -13,7 +13,6 @@ const SORT_OPTIONS = [
 ]
 
 export function ExplorePage() {
-  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
 
   // URL Search Params 기반 상태 파싱
@@ -66,52 +65,65 @@ export function ExplorePage() {
   }
 
   const errorMsg = catError?.message || catalogError?.message
+  const activeRootId = categories.find((category) => (
+    category.id === categoryId || category.children?.some((child) => child.id === categoryId)
+  ))?.id ?? null
+  const activeRootCategory = categories.find((category) => category.id === activeRootId)
 
   return (
     <main className="explore-page">
-
-      {/* Hero 영역 */}
-      <section className="hero" aria-labelledby="explore-heading">
-        <span className="eyebrow">Digital Asset Market</span>
-        <h1 id="explore-heading">
-          아이디어를 완성하는<br />디지털 상품을 찾아보세요.
-        </h1>
-        <p>
-          창작자에게는 더 넓은 판매 기회를, 구매자에게는 바로 쓸 수 있는 결과물을 제공합니다.
-        </p>
-      </section>
-
       {/* 카탈로그 브라우저 메인 그리드 */}
       <section className="catalog-browser" aria-label="상품 카탈로그 브라우저">
 
-        {/* 상단 툴바: 카테고리 탭 (중복 검색 폼 제거완료 - 헤더 전담) */}
+        {/* 선택한 상위 분류와 관련 세부 분류를 같은 목록 안에서 이어서 보여 줍니다. */}
         <div className="catalog-toolbar">
-          <div className="category-tabs" aria-label="카테고리 선택">
-            <Button
-              onClick={() => changeCategory(null)}
-              variant="ghost"
-              className={categoryId === null ? 'category-button is-active' : 'category-button'}
-            >
-              전체
-            </Button>
+          <nav className="category-picker" aria-label="카테고리 선택">
             {catLoading && (
-              <div className="flex gap-2 items-center">
-                <Skeleton className="h-9 w-16 rounded-xl bg-neutral-300/30" />
-                <Skeleton className="h-9 w-20 rounded-xl bg-neutral-300/30" />
-                <Skeleton className="h-9 w-24 rounded-xl bg-neutral-300/30" />
+              <div className="category-picker__loading">
+                {[...Array(4)].map((_, index) => (
+                  <Skeleton key={index} className="h-11 w-28 rounded-full bg-neutral-300/30" />
+                ))}
               </div>
             )}
+            <div className="category-picker__items">
+              <Button
+                onClick={() => changeCategory(null)}
+                variant="ghost"
+                aria-pressed={categoryId === null}
+                className={categoryId === null ? 'category-picker__item is-active' : 'category-picker__item'}
+              >
+                전체 상품
+              </Button>
             {categories.map((category) => (
               <Button
                 key={category.id}
                 onClick={() => changeCategory(category.id)}
                 variant="ghost"
-                className={categoryId === category.id ? 'category-button is-active' : 'category-button'}
+                aria-pressed={activeRootId === category.id}
+                className={activeRootId === category.id ? 'category-picker__item is-active' : 'category-picker__item'}
               >
                 {category.name}
               </Button>
             ))}
-          </div>
+            {activeRootCategory ? (
+              <>
+                <span className="category-picker__separator" aria-hidden="true" />
+                <span className="category-picker__related-label">{activeRootCategory.name}의 세부 분류</span>
+                {activeRootCategory.children?.map((child) => (
+                  <Button
+                    key={child.id}
+                    onClick={() => changeCategory(child.id)}
+                    variant="ghost"
+                    aria-pressed={categoryId === child.id}
+                    className={categoryId === child.id ? 'category-picker__item category-picker__item--related is-active' : 'category-picker__item category-picker__item--related'}
+                  >
+                    {child.name}
+                  </Button>
+                ))}
+              </>
+            ) : null}
+            </div>
+          </nav>
         </div>
 
         {/* 툴바 하단 카운트 및 정렬 */}
@@ -129,68 +141,67 @@ export function ExplorePage() {
           </label>
         </div>
 
-        {errorMsg ? (
-          <p className="text-center py-10 text-red-500 font-bold text-sm" role="alert">
-            {errorMsg}
-          </p>
-        ) : null}
-
-        {/* 로딩 시 럭셔리 스켈레톤 마운트 */}
-        {catalogLoading ? (
-          <div className="product-grid">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="product-card p-5 flex flex-col gap-4">
-                <Skeleton className="w-full aspect-[1.65/1] rounded-[1.6rem] bg-neutral-300/30" />
-                <Skeleton className="h-4 w-20 bg-neutral-300/30 rounded-lg" />
-                <Skeleton className="h-6 w-full bg-neutral-300/30 rounded-lg" />
-                <Skeleton className="h-4 w-2/3 bg-neutral-300/30 rounded-lg" />
-                <div className="flex justify-between items-center mt-2">
-                  <Skeleton className="h-4 w-12 bg-neutral-300/30 rounded-lg" />
-                  <Skeleton className="h-6 w-24 bg-neutral-300/30 rounded-lg" />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <>
-            {!catalogLoading && catalog?.products.length === 0 ? (
-              <p className="text-center py-20 text-sm font-bold text-neutral-400 select-none">
-                조건에 맞는 상품이 없습니다.
+        <div className="catalog-results-main">
+            {errorMsg ? (
+              <p className="text-center py-10 text-red-500 font-bold text-sm" role="alert">
+                {errorMsg}
               </p>
-            ) : (
+            ) : null}
+
+            {catalogLoading ? (
               <div className="product-grid">
-                {catalog?.products.map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    onSelect={(id) => navigate(`/products/${id}`)}
-                  />
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="product-card p-5 flex flex-col gap-4">
+                    <Skeleton className="w-full aspect-[1.65/1] rounded-[1.6rem] bg-neutral-300/30" />
+                    <Skeleton className="h-4 w-20 bg-neutral-300/30 rounded-lg" />
+                    <Skeleton className="h-6 w-full bg-neutral-300/30 rounded-lg" />
+                    <Skeleton className="h-4 w-2/3 bg-neutral-300/30 rounded-lg" />
+                    <div className="flex justify-between items-center mt-2">
+                      <Skeleton className="h-4 w-12 bg-neutral-300/30 rounded-lg" />
+                      <Skeleton className="h-6 w-24 bg-neutral-300/30 rounded-lg" />
+                    </div>
+                  </div>
                 ))}
               </div>
+            ) : (
+              <>
+                {!catalogLoading && catalog?.products.length === 0 ? (
+                  <p className="text-center py-20 text-sm font-bold text-neutral-400 select-none">
+                    조건에 맞는 상품이 없습니다.
+                  </p>
+                ) : (
+                  <div className="product-grid">
+                    {catalog?.products.map((product) => (
+                      <ProductCard
+                        key={product.id}
+                        product={product}
+                      />
+                    ))}
+                  </div>
+                )}
+              </>
             )}
-          </>
-        )}
 
-        {/* 뉴모피즘 페이지네이션 */}
-        {catalog && catalog.totalPages > 1 ? (
-          <nav className="pagination" aria-label="상품 목록 페이지">
-            <Button
-              disabled={page === 0}
-              onClick={() => changePage(page - 1)}
-              variant="ghost"
-            >
-              이전
-            </Button>
-            <span>{page + 1} / {catalog.totalPages}</span>
-            <Button
-              disabled={page + 1 === catalog.totalPages}
-              onClick={() => changePage(page + 1)}
-              variant="ghost"
-            >
-              다음
-            </Button>
-          </nav>
-        ) : null}
+            {catalog && catalog.totalPages > 1 ? (
+              <nav className="pagination" aria-label="상품 목록 페이지">
+                <Button
+                  disabled={page === 0}
+                  onClick={() => changePage(page - 1)}
+                  variant="ghost"
+                >
+                  이전
+                </Button>
+                <span>{page + 1} / {catalog.totalPages}</span>
+                <Button
+                  disabled={page + 1 === catalog.totalPages}
+                  onClick={() => changePage(page + 1)}
+                  variant="ghost"
+                >
+                  다음
+                </Button>
+              </nav>
+            ) : null}
+        </div>
       </section>
     </main>
   )

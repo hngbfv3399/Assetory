@@ -30,8 +30,6 @@ export function RootLayout() {
     })
   }
 
-  // '/products' 목록 페이지를 제외한 모든 개별 상품 상세/판매(/product/123, /products/123) 페이지는 헤더 메뉴를 감추고 로고만 보여줍니다.
-  const isProductPage = pathname.startsWith('/product') && pathname !== '/products'
   const isExplorePage = pathname === '/products'
 
   // 현재 활성화된 페이지 탭 검사 (Active State)
@@ -39,15 +37,15 @@ export function RootLayout() {
   const isExploreActive = pathname === '/products'
   const isFeaturesActive = pathname === '/features'
   const isPricingActive = pathname === '/pricing'
+  const isSellerActive = pathname === '/seller'
+  const isSellerStudio = pathname.startsWith('/seller')
 
   return (
-    <div className="min-h-screen bg-[#ECEFF2]">
-      <header className="site-header-nav site-header-nav--brand">
+    <div className="min-h-screen bg-[#fbf8ef]">
+      {!isSellerStudio ? <header className="site-header-nav site-header-nav--brand">
         <Link className="brand-logo" to="/">Assetory</Link>
 
-        {/* 1. 상품 상세 페이지 (Focus Mode) ➡️ 아무것도 안 보여줌 (로고만) */}
-
-        {/* 2. 상품 탐색 페이지 (Explore Mode) ➡️ 검색창 통합 */}
+        {/* 상품 탐색에서는 검색을 헤더에 통합합니다. */}
         {isExplorePage && (
           <>
             <form className="header-search-form" onSubmit={handleSearchSubmit}>
@@ -68,8 +66,8 @@ export function RootLayout() {
           </>
         )}
 
-        {/* 3. 일반 안내 페이지 ➡️ 4단 메뉴바 노출 */}
-        {!isProductPage && !isExplorePage && (
+        {/* 그 외 화면은 같은 공통 메뉴를 사용합니다. */}
+        {!isExplorePage && (
           <nav className="header-nav-menu" aria-label="주요 메뉴">
             <Link
               className={`menu-item ${isHomeActive ? 'active-menu-item' : ''}`}
@@ -95,16 +93,22 @@ export function RootLayout() {
             >
               가격 정책
             </Link>
+            <Link
+              className={`menu-item ${isSellerActive ? 'active-menu-item' : ''}`}
+              to="/seller"
+            >
+              판매자 센터
+            </Link>
             <Link className="login-button-link" to="/login">
               로그인 / 회원가입
             </Link>
           </nav>
         )}
-      </header>
-      <div className="pt-20">
+      </header> : null}
+      <div className={isSellerStudio ? '' : 'pt-20'}>
         <Outlet />
       </div>
-      <SiteFooter />
+      {!isSellerStudio ? <SiteFooter /> : null}
       <Toaster position="top-center" richColors />
     </div>
   )

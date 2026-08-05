@@ -19,9 +19,15 @@ public class CategoryService {
 	}
 
 	public List<CategoryResponse> getActiveCategories() {
-		return categoryRepository.findByActiveTrueOrderBySortOrderAscIdAsc()
+		return categoryRepository.findByActiveTrueAndParentIsNullOrderBySortOrderAscIdAsc()
 			.stream()
-			.map(CategoryResponse::from)
+			.map(category -> CategoryResponse.from(
+				category,
+				categoryRepository.findByParentIdAndActiveTrueOrderBySortOrderAscIdAsc(category.getId())
+					.stream()
+					.map(child -> CategoryResponse.from(child, List.of()))
+					.toList()
+			))
 			.toList();
 	}
 }

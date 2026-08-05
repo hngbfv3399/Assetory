@@ -1,23 +1,32 @@
 import { Badge } from '../common/ui/badge.jsx'
+import { Link } from 'react-router-dom'
 
 const currencyFormatter = new Intl.NumberFormat('ko-KR')
 
-export function ProductCard({ product, onSelect }) {
+export function ProductCard({ product }) {
   return (
     <article className="product-card">
-      <button
+      <Link
         className="product-card__button"
-        type="button"
-        onClick={() => onSelect(product.id)}
+        to={`/products/${product.id}`}
       >
         <div className="product-card__image-wrap">
           {product.thumbnailUrl ? (
-            <img className="product-card__image" src={product.thumbnailUrl} alt="" />
+            <img
+              className="product-card__image"
+              src={product.thumbnailUrl}
+              alt={`${product.name} 미리보기`}
+              loading="lazy"
+              onError={(event) => {
+                event.currentTarget.hidden = true
+                event.currentTarget.parentElement?.classList.add('has-image-error')
+              }}
+            />
           ) : (
             <div className="product-card__image product-card__image--empty">ASSET</div>
           )}
           {product.categoryName && (
-            <Badge className="absolute top-4 left-4 border-none shadow-sm select-none">
+            <Badge className="product-card__category absolute top-4 left-4 border-none shadow-sm select-none">
               {product.categoryName}
             </Badge>
           )}
@@ -34,7 +43,7 @@ export function ProductCard({ product, onSelect }) {
           </div>
           <strong>{currencyFormatter.format(product.price)}원</strong>
         </div>
-      </button>
+      </Link>
     </article>
   )
 }

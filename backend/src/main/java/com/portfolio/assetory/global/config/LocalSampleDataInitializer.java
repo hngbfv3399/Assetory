@@ -1,6 +1,7 @@
 package com.portfolio.assetory.global.config;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
@@ -26,6 +27,19 @@ public class LocalSampleDataInitializer {
 
 	private static final String SAMPLE_SELLER_EMAIL = "seller.sample@assetory.local";
 	private static final String SAMPLE_BUYER_EMAIL = "buyer.sample@assetory.local";
+	private static final int CATALOG_SAMPLE_COUNT = 100;
+	private static final List<CatalogSample> CATALOG_SAMPLES = List.of(
+		new CatalogSample("브랜드 아이덴티티 스타터 키트", "로고와 색상 규칙을 빠르게 정리하는 브랜드 템플릿입니다.", "브랜드를 시작할 때 필요한 기본 시각 자산과 적용 가이드를 담았습니다."),
+		new CatalogSample("모바일 앱 화면 설계 키트", "앱 화면 흐름을 구성할 수 있는 실무형 UI 키트입니다.", "온보딩부터 설정 화면까지, 반복되는 모바일 화면을 빠르게 구성할 수 있습니다."),
+		new CatalogSample("콘텐츠 운영 노션 템플릿", "콘텐츠 기획과 발행 일정을 한곳에서 관리하는 템플릿입니다.", "아이디어 수집, 일정 관리, 발행 체크리스트를 한 흐름으로 정리했습니다."),
+		new CatalogSample("React 커머스 컴포넌트 모음", "상품 탐색과 결제 흐름에 필요한 React 컴포넌트 모음입니다.", "목록, 필터, 장바구니 등 커머스 화면의 기본 구조를 제공합니다."),
+		new CatalogSample("랜딩 페이지 카피 라이브러리", "서비스 소개 문장을 빠르게 다듬을 수 있는 카피 모음입니다.", "첫 화면부터 CTA까지 활용할 수 있는 짧고 명확한 문장 예시를 담았습니다."),
+		new CatalogSample("1인 창작자 판매 운영 가이드", "디지털 상품 판매 흐름을 점검하는 실전 전자책입니다.", "상품 기획, 소개 작성, 고객 응대의 핵심 기준을 단계별로 설명합니다."),
+		new CatalogSample("데이터 대시보드 디자인 시스템", "지표를 읽기 쉽게 보여 주는 대시보드용 컴포넌트입니다.", "카드, 차트, 상태 표시를 일관된 규칙으로 조합할 수 있습니다."),
+		new CatalogSample("API 문서 작성 템플릿", "개발자와 협업할 때 쓰는 API 문서 템플릿입니다.", "요청, 응답, 오류 사례를 빠짐없이 기록하는 표준 구조를 제공합니다."),
+		new CatalogSample("프리랜서 계약서 체크리스트", "프로젝트 시작 전 확인할 계약 항목을 정리한 전자책입니다.", "업무 범위와 일정, 수정 정책을 명확히 합의하는 데 도움을 줍니다."),
+		new CatalogSample("소셜 미디어 비주얼 팩", "채널별 게시물을 빠르게 제작하는 그래픽 에셋입니다.", "피드, 스토리, 배너에 바로 적용할 수 있는 편집 가능한 시안을 제공합니다.")
+	);
 
 	@Bean
 	CommandLineRunner initializeLocalSampleData(
@@ -40,12 +54,23 @@ public class LocalSampleDataInitializer {
 			Category design = findOrCreateCategory(categoryRepository, "디자인", 1);
 			Category development = findOrCreateCategory(categoryRepository, "개발", 2);
 			Category ebook = findOrCreateCategory(categoryRepository, "전자책", 3);
+			List<Category> catalogCategories = List.of(
+				findOrCreateSubcategory(categoryRepository, "UI/UX", 1, design),
+				findOrCreateSubcategory(categoryRepository, "게임 에셋", 2, design),
+				findOrCreateSubcategory(categoryRepository, "아트·일러스트", 3, design),
+				findOrCreateSubcategory(categoryRepository, "영상·모션", 4, design),
+				findOrCreateSubcategory(categoryRepository, "웹·앱 템플릿", 1, development),
+				findOrCreateSubcategory(categoryRepository, "코드·라이브러리", 2, development),
+				findOrCreateSubcategory(categoryRepository, "프로그램·도구", 3, development),
+				findOrCreateSubcategory(categoryRepository, "판매·운영 가이드", 1, ebook),
+				findOrCreateSubcategory(categoryRepository, "영상 강의", 2, ebook),
+				findOrCreateSubcategory(categoryRepository, "비즈니스 자료", 3, ebook)
+			);
+			User seller = findOrCreateUser(
+				userRepository, passwordEncoder, SAMPLE_SELLER_EMAIL, "에셋토리판매자"
+			);
 
 			if (productRepository.count() == 0) {
-				User seller = findOrCreateUser(
-					userRepository, passwordEncoder, SAMPLE_SELLER_EMAIL, "에셋토리판매자"
-				);
-
 				createOnSaleProduct(
 					productRepository, productImageRepository, seller, development,
 					"React 관리자 대시보드 템플릿", "React로 제작한 관리자 페이지 템플릿입니다.",
@@ -67,6 +92,13 @@ public class LocalSampleDataInitializer {
 				createDraftProduct(productRepository, seller, development);
 			}
 
+			createCatalogSampleProducts(
+				productRepository,
+				productImageRepository,
+				seller,
+				catalogCategories
+			);
+
 			if (reviewRepository.count() == 0) {
 				User buyer = findOrCreateUser(
 					userRepository, passwordEncoder, SAMPLE_BUYER_EMAIL, "에셋토리구매자"
@@ -78,6 +110,49 @@ public class LocalSampleDataInitializer {
 				reviewRepository.save(Review.create(10003L, buyer, reactDashboard, 4, "관리 화면의 출발점으로 사용하기 좋습니다."));
 			}
 		};
+	}
+
+	private void createCatalogSampleProducts(
+		ProductRepository productRepository,
+		ProductImageRepository productImageRepository,
+		User seller,
+		List<Category> categories
+	) {
+		for (int index = 0; index < CATALOG_SAMPLE_COUNT; index++) {
+			int sampleIndex = index;
+			CatalogSample sample = CATALOG_SAMPLES.get(sampleIndex % CATALOG_SAMPLES.size());
+			String name = "%s %03d".formatted(sample.name(), sampleIndex + 1);
+			Category category = categories.get(sampleIndex % categories.size());
+			productRepository.findByName(name).ifPresentOrElse(
+				product -> {
+					product.update(category, null, null, null, null);
+					productRepository.save(product);
+				},
+				() -> createOnSaleProduct(
+					productRepository,
+					productImageRepository,
+					seller,
+					category,
+					name,
+					sample.summary(),
+					sample.description(),
+					BigDecimal.valueOf(9_900L + (sampleIndex % 10) * 3_000L),
+					catalogImageUrl(sampleIndex)
+				)
+			);
+		}
+	}
+
+	private String catalogImageUrl(int index) {
+		String[] imageIds = {
+			"photo-1558655146-d09347e92766",
+			"photo-1559028012-481c04fa702d",
+			"photo-1544716278-ca5e3f4abd8c",
+			"photo-1460925895917-afdab827c52f",
+			"photo-1498050108023-c5249f4df085"
+		};
+		return "https://images.unsplash.com/%s?auto=format&fit=crop&w=1200&q=80"
+			.formatted(imageIds[index % imageIds.length]);
 	}
 
 	private User findOrCreateUser(
@@ -97,6 +172,16 @@ public class LocalSampleDataInitializer {
 	private Category findOrCreateCategory(CategoryRepository categoryRepository, String name, int sortOrder) {
 		return categoryRepository.findByName(name)
 			.orElseGet(() -> categoryRepository.save(Category.create(name, sortOrder)));
+	}
+
+	private Category findOrCreateSubcategory(
+		CategoryRepository categoryRepository,
+		String name,
+		int sortOrder,
+		Category parent
+	) {
+		return categoryRepository.findByName(name)
+			.orElseGet(() -> categoryRepository.save(Category.create(name, sortOrder, parent)));
 	}
 
 	private void createOnSaleProduct(
@@ -133,5 +218,8 @@ public class LocalSampleDataInitializer {
 			new BigDecimal("9900")
 		);
 		productRepository.save(product);
+	}
+
+	private record CatalogSample(String name, String summary, String description) {
 	}
 }

@@ -91,12 +91,37 @@ export function ProductDetailPage() {
 
           <div className="detail-cta-box">
             <button type="button" className="detail-buy-btn" onClick={handleMockBuy}>
-              Mock 결제 / 에셋 내려받기
+              Mock 결제로 구매하기
             </button>
           </div>
         </div>
 
       </div>
+
+      <section className="product-selling-guide" aria-labelledby="product-selling-guide-title">
+        <div className="product-selling-guide__heading">
+          <span>HOW IT WORKS</span>
+          <h2 id="product-selling-guide-title">이 상품은 이렇게 판매돼요</h2>
+          <p>구매 전에 결제 방식과 이용 흐름을 확인하세요.</p>
+        </div>
+        <div className="product-selling-guide__items">
+          <article>
+            <span>01 · 판매 방식</span>
+            <h3>디지털 상품을 한 번 구매해요</h3>
+            <p>배송 없이 상품 소개와 구매 자료를 확인하는 디지털 상품입니다.</p>
+          </article>
+          <article>
+            <span>02 · 결제 방식</span>
+            <h3>Mock 결제로 주문을 확인해요</h3>
+            <p>현재 서비스는 Mock 결제만 제공합니다. 실제 청구나 송금은 진행되지 않습니다.</p>
+          </article>
+          <article>
+            <span>03 · 이용 방식</span>
+            <h3>결제 후 내 라이브러리에서 이용해요</h3>
+            <p>결제가 완료되면 구매 자료 접근 권한이 부여되어 필요할 때 다시 이용할 수 있습니다.</p>
+          </article>
+        </div>
+      </section>
 
       {/* 하단부: 구매 후기 섹션 */}
       <section className="detail-reviews-container" aria-labelledby="detail-review-heading">

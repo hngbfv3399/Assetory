@@ -61,7 +61,7 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
 			left join Review review on review.product = product and review.deletedAt is null
 			where product.status = :status
 			  and product.deletedAt is null
-			  and (:categoryId is null or product.category.id = :categoryId)
+			  and (:categoryId is null or product.category.id = :categoryId or product.category.parent.id = :categoryId)
 			  and (:keyword is null
 			       or lower(product.name) like lower(concat('%', :keyword, '%'))
 			       or lower(product.summary) like lower(concat('%', :keyword, '%')))
@@ -73,7 +73,7 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
 			from Product product
 			where product.status = :status
 			  and product.deletedAt is null
-			  and (:categoryId is null or product.category.id = :categoryId)
+			  and (:categoryId is null or product.category.id = :categoryId or product.category.parent.id = :categoryId)
 			  and (:keyword is null
 			       or lower(product.name) like lower(concat('%', :keyword, '%'))
 			       or lower(product.summary) like lower(concat('%', :keyword, '%')))

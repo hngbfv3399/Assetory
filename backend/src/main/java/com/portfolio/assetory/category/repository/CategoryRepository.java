@@ -9,7 +9,9 @@ import com.portfolio.assetory.category.domain.Category;
 
 public interface CategoryRepository extends JpaRepository<Category, Long> {
 
-	List<Category> findByActiveTrueOrderBySortOrderAscIdAsc();
+	List<Category> findByActiveTrueAndParentIsNullOrderBySortOrderAscIdAsc();
+
+	List<Category> findByParentIdAndActiveTrueOrderBySortOrderAscIdAsc(Long parentId);
 
 	Optional<Category> findByName(String name);
 

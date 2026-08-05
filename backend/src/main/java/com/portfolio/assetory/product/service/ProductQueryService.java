@@ -127,7 +127,10 @@ public class ProductQueryService {
 			predicates.add(criteriaBuilder.isNull(root.get("deletedAt")));
 
 			if (categoryId != null) {
-				predicates.add(criteriaBuilder.equal(root.get("category").get("id"), categoryId));
+				predicates.add(criteriaBuilder.or(
+					criteriaBuilder.equal(root.get("category").get("id"), categoryId),
+					criteriaBuilder.equal(root.get("category").get("parent").get("id"), categoryId)
+				));
 			}
 
 			if (keyword != null && !keyword.isBlank()) {

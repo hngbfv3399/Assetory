@@ -36,7 +36,7 @@ Authorization: Bearer {accessToken}
 
 | Method | API | 주요 입력 | 성공 | 설명 |
 | --- | --- | --- | --- | --- |
-| GET | `/api/categories` | 없음 | 200 | 활성 카테고리 목록 |
+| GET | `/api/categories` | 없음 | 200 | 활성 상위 카테고리와 세부 카테고리 목록 |
 | GET | `/api/products` | `categoryId`, `keyword`, `sort`, `page`, `size` | 200 | 공개 상품 목록 |
 | GET | `/api/products/{productId}` | 경로 ID | 200 | 공개 상품 상세 |
 | GET | `/api/products/{productId}/reviews` | `sort`, `page`, `size` | 200 | 공개 후기 목록 |
@@ -47,7 +47,7 @@ Authorization: Bearer {accessToken}
 
 | 파라미터 | 기본값 | 허용 값/제약 |
 | --- | --- | --- |
-| `categoryId` | 없음 | 카테고리 ID |
+| `categoryId` | 없음 | 상위 또는 세부 카테고리 ID. 상위 카테고리를 지정하면 하위 카테고리 상품도 함께 조회 |
 | `keyword` | 없음 | 상품명·요약 검색어 |
 | `sort` | `LATEST` | `LATEST`, `PRICE_LOW`, `PRICE_HIGH`, `POPULAR` |
 | `page` | `0` | 0 이상 |
